@@ -8,7 +8,7 @@
       "preLaunchTask": "build",
       "program": "${workspaceFolder}/bin/Debug/net5.0/FanoutAPIV1.dll",
       "args": [],
-      "cwd": "${workspaceFolder}",
+      "cwd": "${workspaceFolder}/src",
       "console": "internalConsole",
       "stopAtEntry": false
     }
