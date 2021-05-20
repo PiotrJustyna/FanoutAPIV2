@@ -6,4 +6,4 @@ metrics.json
 plot.html
 results.bin
 **/.vs
-./idea/*
+.idea/*

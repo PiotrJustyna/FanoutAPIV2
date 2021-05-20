@@ -9,18 +9,17 @@ using Microsoft.AspNetCore.Mvc;
 [Route("[controller]")]
 public class HelloWorldController : ControllerBase
 {
-    private const int numberOfChildTasks = 250;
-    private const int delayMs = 1000;
-
     [HttpGet]
     public async Task<ActionResult<Result>> Get(
         int slaMs,
+        int tasksPerRequest,
+        int taskDelayMs,
         CancellationToken cancellationToken)
     {
         var stopwatch = new Stopwatch();
-        
+
         stopwatch.Start();
-        
+
         var timeoutCancellationTokenSource = new CancellationTokenSource(slaMs);
 
         var timeoutCancellationToken = timeoutCancellationTokenSource.Token;
@@ -31,14 +30,31 @@ public class HelloWorldController : ControllerBase
 
         var combinedCancellationToken = combinedCancellationTokenSource.Token;
 
+        var tasksPerParentTask = tasksPerRequest / 4;
+        
         var parentTasks = new List<Task<FanoutTaskStatus>>
         {
-            ParentTask(combinedCancellationToken),
-            ParentTask(combinedCancellationToken),
-            ParentTask(combinedCancellationToken),
-            ParentTask(combinedCancellationToken)
+            ParentTask(
+                tasksPerParentTask,
+                taskDelayMs,
+                combinedCancellationToken),
+
+            ParentTask(
+                tasksPerParentTask,
+                taskDelayMs,
+                combinedCancellationToken),
+            
+            ParentTask(
+                tasksPerParentTask,
+                taskDelayMs,
+                combinedCancellationToken),
+
+            ParentTask(
+                tasksPerParentTask,
+                taskDelayMs,
+                combinedCancellationToken)
         };
-        
+
         var workTask = Task.WhenAll(parentTasks);
 
         await Task.WhenAny(
@@ -49,7 +65,7 @@ public class HelloWorldController : ControllerBase
             .Select(x =>
                 x.IsCompletedSuccessfully
                     ? new FanoutTaskStatus(x.Result.NumberOfSuccessfulTasks, x.Result.NumberOfFailedTasks)
-                    : new FanoutTaskStatus(0, numberOfChildTasks))
+                    : new FanoutTaskStatus(0, tasksPerParentTask))
             .Aggregate((x, y) =>
                 new FanoutTaskStatus(
                     x.NumberOfSuccessfulTasks + y.NumberOfSuccessfulTasks,
@@ -69,13 +85,18 @@ public class HelloWorldController : ControllerBase
         }
     }
 
-    private async Task<FanoutTaskStatus> ParentTask(CancellationToken cancellationToken)
+    private async Task<FanoutTaskStatus> ParentTask(
+        int numberOfChildTasks,
+        int taskDelayMs,
+        CancellationToken cancellationToken)
     {
         var tasks = new List<Task>();
 
         for (byte i = 0; i < numberOfChildTasks; i++)
         {
-            tasks.Add(ChildTask(cancellationToken));
+            tasks.Add(ChildTask(
+                taskDelayMs,
+                cancellationToken));
         }
 
         await Task.WhenAll(tasks);
@@ -87,10 +108,12 @@ public class HelloWorldController : ControllerBase
             numberOfChildTasks - successfulTasks);
     }
 
-    private async Task ChildTask(CancellationToken cancellationToken)
+    private async Task ChildTask(
+        int childTaskDelayMs,
+        CancellationToken cancellationToken)
     {
         await Task.Delay(
-            delayMs,
+            childTaskDelayMs,
             cancellationToken);
     }
 }
@@ -98,7 +121,7 @@ public class HelloWorldController : ControllerBase
 public record FanoutTaskStatus(
     int NumberOfSuccessfulTasks,
     int NumberOfFailedTasks);
-    
+
 public record Result(
     long ServerProcessingTimeMs,
     FanoutTaskStatus CombinedTaskStatus);
