@@ -18,8 +18,8 @@ namespace FanoutAPIV1
 
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddControllers();
+            services.AddHttpClient();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
