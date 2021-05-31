@@ -1,3 +1,4 @@
+using FanoutAPIV2;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -18,6 +19,9 @@ namespace FanoutAPIV1
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<ClusterClientHostedService>();
+            services.AddSingleton<IHostedService>(_ => _.GetService<ClusterClientHostedService>());
+            services.AddSingleton(_ => _.GetService<ClusterClientHostedService>().Client);
             services.AddControllers();
             services.AddHttpClient();
             services.AddHealthChecks();

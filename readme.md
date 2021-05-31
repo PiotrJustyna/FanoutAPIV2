@@ -1,6 +1,6 @@
 # readme
 
-Fanout API V1 - the project demonstrates how a task-heavy Web API would behave. The task fanout is done internally (in API runtime), the API is task-heavy.
+Fanout API V2 - the project demonstrates how a task-heavy Web API would behave. The task fanout is done in Orleans, the API is not task-heavy anymore.
 
 ## parameters
 
