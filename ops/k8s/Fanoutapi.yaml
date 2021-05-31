@@ -30,15 +30,33 @@ spec:
         - image: 156305373065.dkr.ecr.eu-west-1.amazonaws.com/fanout:v1
           name: fanout
           imagePullPolicy: "Always"
+          env:
+            - name: FANOUT-HELPER-API-HOST
+              value: fanout-helper.fanout.svc:80
           ports:
             - containerPort: 80
           resources:
             requests:
-              cpu: 200m
-              memory: 128Mi
+              cpu: 500m
+              memory: 512Mi
             limits:
-              cpu: 200m
-              memory: 256Mi
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              port: 80
+              path: /health
+              scheme: http
+            initialDelaySeconds: 5 
+            periodSeconds: 5
+            failureThreshold: 1
+          readinessProbe:
+            httpGet:
+              scheme: http
+              path: /helloworld
+              port: 80
+            periodSeconds: 2
+            initialDelaySeconds: 3
 
 ---
 apiVersion: v1
